@@ -13,7 +13,7 @@ from models.retinaface import RetinaFace
 from utils.box_utils import decode, decode_landm
 from utils.nms.py_cpu_nms import py_cpu_nms
 
-confidence_threshold = 0.02
+confidence_threshold = 0.6
 top_k = 5000
 nms_threshold = 0.4
 keep_top_k = 750
@@ -63,7 +63,7 @@ if __name__ == '__main__':
     net = load_model(net, 'mobilenet0.25_Final.pth', False)
     net.eval()
     print('Finished loading model!')
-    print(net)
+    # print(net)
     cudnn.benchmark = True
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  # sets device for model and PyTorch tensors
     net = net.to(device)
@@ -85,7 +85,7 @@ if __name__ == '__main__':
 
     tic = time.time()
     loc, conf, landms = net(img)  # forward pass
-    print('net forward time: {:.4f}'.format(time.time() - tic))
+    # print('net forward time: {:.4f}'.format(time.time() - tic))
 
     priorbox = PriorBox(cfg, image_size=(im_height, im_width))
     priors = priorbox.forward()
