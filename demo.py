@@ -1,7 +1,6 @@
 import time
 
 import cv2
-from tqdm import tqdm
 
 from retinaface.detector import detect
 from retinaface.loader import load_model
@@ -12,15 +11,13 @@ if __name__ == '__main__':
     # testing begin
     image_path = "images/test.jpg"
     img_raw = cv2.imread(image_path, cv2.IMREAD_COLOR)
-    elapsed = 0.0
-    num_runs = 1000
-    for i in tqdm(range(num_runs)):
-        start = time.time()
-        dets = detect(net, img_raw)
-        end = time.time()
-        elapsed += end - start
 
-    print('avg time: {:5f} ms'.format(elapsed / num_runs * 1000))
+    start = time.time()
+    dets = detect(net, img_raw)
+    end = time.time()
+    elapsed = end - start
+
+    print('avg time: {:5f} ms'.format(elapsed * 1000))
 
     # show image
     for b in dets:
@@ -43,5 +40,4 @@ if __name__ == '__main__':
         cv2.circle(img_raw, (b[13], b[14]), 1, (255, 0, 0), 4)
     # save image
 
-    name = "test.jpg"
-    cv2.imwrite(name, img_raw)
+    cv2.imwrite('images/result.jpg', img_raw)
