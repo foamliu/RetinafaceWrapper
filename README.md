@@ -1,5 +1,7 @@
 # Retinaface
 
+This is a wrapper of https://github.com/biubug6/Pytorch_Retinaface.
+
 ## Usage
 
 detect faces:
