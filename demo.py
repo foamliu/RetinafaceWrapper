@@ -1,16 +1,30 @@
+import time
+
 import cv2
+from tqdm import tqdm
 
 from retinaface.detector import detect
+from retinaface.loader import load_model
 
-vis_thres = 0.6
 if __name__ == '__main__':
+    net = load_model()
+
     # testing begin
     image_path = "images/test.jpg"
     img_raw = cv2.imread(image_path, cv2.IMREAD_COLOR)
-    dets = detect(img_raw)
+    elapsed = 0.0
+    num_runs = 1000
+    for i in tqdm(range(num_runs)):
+        start = time.time()
+        dets = detect(net, img_raw)
+        end = time.time()
+        elapsed += end - start
+
+    print('avg time: {:5f} ms'.format(elapsed / num_runs * 1000))
 
     # show image
     for b in dets:
+        vis_thres = 0.6
         if b[4] < vis_thres:
             continue
         text = "{:.4f}".format(b[4])

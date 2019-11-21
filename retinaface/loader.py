@@ -39,7 +39,5 @@ def load_model():
         pretrained_dict = remove_prefix(pretrained_dict, 'module.')
     check_keys(model, pretrained_dict)
     model.load_state_dict(pretrained_dict, strict=False)
+    print('Finished loading model!')
     return model
-
-
-net = load_model()
