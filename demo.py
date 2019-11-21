@@ -2,18 +2,15 @@ import time
 
 import cv2
 
-from retinaface.detector import detect
-from retinaface.loader import load_model
+from retinaface.detector import detect_faces
 
 if __name__ == '__main__':
-    net = load_model()
-
     # testing begin
     image_path = "images/test.jpg"
     img_raw = cv2.imread(image_path, cv2.IMREAD_COLOR)
 
     start = time.time()
-    scores, bboxes, landmarks = detect(net, img_raw)
+    scores, bboxes, landmarks = detect_faces(img_raw)
     end = time.time()
     elapsed = end - start
 
