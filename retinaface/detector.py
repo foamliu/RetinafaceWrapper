@@ -2,22 +2,20 @@ from __future__ import print_function
 
 import time
 
-import cv2
 import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
 
-from data import cfg_mnet
-from layers.functions.prior_box import PriorBox
-from models.retinaface import RetinaFace
-from utils.box_utils import decode, decode_landm
-from utils.nms.py_cpu_nms import py_cpu_nms
+from .data import cfg_mnet
+from .layers.functions.prior_box import PriorBox
+from .models.retinaface import RetinaFace
+from .utils.box_utils import decode, decode_landm
+from .utils.nms.py_cpu_nms import py_cpu_nms
 
 confidence_threshold = 0.6
 top_k = 5000
 nms_threshold = 0.4
 keep_top_k = 750
-vis_thres = 0.6
 
 
 def check_keys(model, pretrained_state_dict):
@@ -40,13 +38,13 @@ def remove_prefix(state_dict, prefix):
     return {f(key): value for key, value in state_dict.items()}
 
 
-def load_model(model, pretrained_path, load_to_cpu):
+def load_model():
+    pretrained_path = 'weights/mobilenet0.25_Final.pth'
     print('Loading pretrained model from {}'.format(pretrained_path))
-    if load_to_cpu:
-        pretrained_dict = torch.load(pretrained_path, map_location=lambda storage, loc: storage)
-    else:
-        device = torch.cuda.current_device()
-        pretrained_dict = torch.load(pretrained_path, map_location=lambda storage, loc: storage.cuda(device))
+    model = RetinaFace(cfg=cfg_mnet, phase='test')
+
+    device = torch.cuda.current_device()
+    pretrained_dict = torch.load(pretrained_path, map_location=lambda storage, loc: storage.cuda(device))
     if "state_dict" in pretrained_dict.keys():
         pretrained_dict = remove_prefix(pretrained_dict['state_dict'], 'module.')
     else:
@@ -56,11 +54,11 @@ def load_model(model, pretrained_path, load_to_cpu):
     return model
 
 
-if __name__ == '__main__':
-    cfg = cfg_mnet
+net = load_model()
+
+
+def detect(img_raw):
     # net and model
-    net = RetinaFace(cfg=cfg, phase='test')
-    net = load_model(net, 'mobilenet0.25_Final.pth', False)
     net.eval()
     print('Finished loading model!')
     # print(net)
@@ -69,10 +67,6 @@ if __name__ == '__main__':
     net = net.to(device)
 
     resize = 1
-
-    # testing begin
-    image_path = "images/test.jpg"
-    img_raw = cv2.imread(image_path, cv2.IMREAD_COLOR)
 
     img = np.float32(img_raw)
     im_height, im_width = img.shape[:2]
@@ -87,15 +81,15 @@ if __name__ == '__main__':
     loc, conf, landms = net(img)  # forward pass
     # print('net forward time: {:.4f}'.format(time.time() - tic))
 
-    priorbox = PriorBox(cfg, image_size=(im_height, im_width))
+    priorbox = PriorBox(cfg_mnet, image_size=(im_height, im_width))
     priors = priorbox.forward()
     priors = priors.to(device)
     prior_data = priors.data
-    boxes = decode(loc.data.squeeze(0), prior_data, cfg['variance'])
+    boxes = decode(loc.data.squeeze(0), prior_data, cfg_mnet['variance'])
     boxes = boxes * scale / resize
     boxes = boxes.cpu().numpy()
     scores = conf.squeeze(0).data.cpu().numpy()[:, 1]
-    landms = decode_landm(landms.data.squeeze(0), prior_data, cfg['variance'])
+    landms = decode_landm(landms.data.squeeze(0), prior_data, cfg_mnet['variance'])
     scale1 = torch.Tensor([img.shape[3], img.shape[2], img.shape[3], img.shape[2],
                            img.shape[3], img.shape[2], img.shape[3], img.shape[2],
                            img.shape[3], img.shape[2]])
@@ -127,26 +121,4 @@ if __name__ == '__main__':
     landms = landms[:keep_top_k, :]
 
     dets = np.concatenate((dets, landms), axis=1)
-
-    # show image
-    for b in dets:
-        if b[4] < vis_thres:
-            continue
-        text = "{:.4f}".format(b[4])
-        b = list(map(int, b))
-        cv2.rectangle(img_raw, (b[0], b[1]), (b[2], b[3]), (0, 0, 255), 2)
-        cx = b[0]
-        cy = b[1] + 12
-        cv2.putText(img_raw, text, (cx, cy),
-                    cv2.FONT_HERSHEY_DUPLEX, 0.5, (255, 255, 255))
-
-        # landms
-        cv2.circle(img_raw, (b[5], b[6]), 1, (0, 0, 255), 4)
-        cv2.circle(img_raw, (b[7], b[8]), 1, (0, 255, 255), 4)
-        cv2.circle(img_raw, (b[9], b[10]), 1, (255, 0, 255), 4)
-        cv2.circle(img_raw, (b[11], b[12]), 1, (0, 255, 0), 4)
-        cv2.circle(img_raw, (b[13], b[14]), 1, (255, 0, 0), 4)
-    # save image
-
-    name = "test.jpg"
-    cv2.imwrite(name, img_raw)
+    return dets
