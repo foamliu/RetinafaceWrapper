@@ -10,24 +10,13 @@ from retinaface.loader import load_model
 from retinaface.utils.box_utils import decode, decode_landm
 from retinaface.utils.nms.py_cpu_nms import py_cpu_nms
 
-confidence_threshold = 0.6
-top_k = 5000
-nms_threshold = 0.4
-keep_top_k = 750
-
+cudnn.benchmark = True
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = load_model().to(device)
+model.eval()
 
 
-def detect_faces(img_raw):
-    model.eval()
-
-    # print(net)
-    cudnn.benchmark = True
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')  # sets device for model and PyTorch tensors
-
-    resize = 1
-
+def detect_faces(img_raw, confidence_threshold=0.6, top_k=5000, nms_threshold=0.4, keep_top_k=750, resize=1):
     img = np.float32(img_raw)
     im_height, im_width = img.shape[:2]
     scale = torch.Tensor([img.shape[1], img.shape[0], img.shape[1], img.shape[0]])
