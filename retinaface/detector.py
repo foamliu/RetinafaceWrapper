@@ -79,5 +79,7 @@ def detect(net, img_raw):
     dets = dets[:keep_top_k, :]
     landms = landms[:keep_top_k, :]
 
-    dets = np.concatenate((dets, landms), axis=1)
-    return dets
+    scores = dets[:, 4]
+    bounding_boxes = dets[:, :4]
+
+    return scores, bounding_boxes, landms
