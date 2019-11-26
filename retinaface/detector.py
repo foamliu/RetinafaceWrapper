@@ -12,6 +12,7 @@ from retinaface.utils.nms.py_cpu_nms import py_cpu_nms
 
 cudnn.benchmark = True
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# device = torch.device('cpu')
 model = load_model().to(device)
 model.eval()
 
@@ -70,7 +71,12 @@ def detect_faces(img_raw, confidence_threshold=0.6, top_k=5000, nms_threshold=0.
     dets = dets[:keep_top_k, :]
     landms = landms[:keep_top_k, :]
 
-    scores = dets[:, 4]
-    bounding_boxes = dets[:, :4]
+    landms = landms.reshape((-1, 5, 2))
+    landms = landms.transpose()
+    landms = landms.reshape((-1, 10,))
 
-    return scores, bounding_boxes, landms
+    # scores = dets[:, 4]
+    # bounding_boxes = dets[:, :4]
+
+    # return scores, bounding_boxes, landms
+    return dets, landms

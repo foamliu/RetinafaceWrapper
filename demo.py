@@ -10,7 +10,7 @@ if __name__ == '__main__':
     img_raw = cv2.imread(image_path, cv2.IMREAD_COLOR)
 
     start = time.time()
-    scores, bboxes, landmarks = detect_faces(img_raw)
+    bboxes, landmarks = detect_faces(img_raw)
     end = time.time()
     elapsed = end - start
 
@@ -21,7 +21,7 @@ if __name__ == '__main__':
     # show image
     for i in range(num_faces):
         b = bboxes[i]
-        text = "{:.4f}".format(scores[i])
+        text = "{:.4f}".format(b[4])
         b = list(map(int, b))
         cv2.rectangle(img_raw, (b[0], b[1]), (b[2], b[3]), (0, 0, 255), 2)
         cx = b[0]
